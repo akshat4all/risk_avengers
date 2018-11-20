@@ -87,7 +87,9 @@ del X1['auctionIndicator']
 #X2 = X[X.auctionIndicator==2]
 
 Y = X3.groupby(['date','stock','frameId'],as_index=False).agg({'volume':'mean','binPrice':'mean'})
-
+Y.dtypes
+Y['volume'] = Y.volume.astype(int)
+Y.dtypes
 Y1 =pd.pivot_table(Y, values = 'volume', index=['date','stock'],columns = ['frameId']).reset_index()
 Y1 =Y1.rename(columns={1.0:"1_volume"})
 Y1 =Y1.rename(columns={2.0:"2_volume"})
@@ -156,9 +158,12 @@ print("Accuracy: {0:.4f}".format(np.sqrt(metrics.mean_squared_error(y_test, y_pr
 print("Accuracy: {0:.4f}".format(metrics.r2_score(y_test, y_pred)))
 
 
+
 from sklearn.ensemble import RandomForestClassifier
+x_train_10k = x_train.iloc[0:10000,:]
+y_train_10k = y_train.iloc[0:10000]
 rf_model = RandomForestClassifier(random_state=42)      # Create random forest object
-rf_model.fit(x_train, y_train.ravel())
+rf_model.fit(x_train_10k, y_train_10k.ravel())
 
 y_pred_rd = regressor.predict(x_test)
 
@@ -170,7 +175,7 @@ print("Accuracy: {0:.4f}".format(metrics.r2_score(y_test, y_pred_rd)))
 
 #----------------------------------------------------------------------------------------------
 
-
+x_train.dtypes
 #Splitting
 
 
