@@ -16,6 +16,17 @@ train_data['auctionIndicator'] = train_data['auctionIndicator'].map(auction_indi
 train_data.fillna(method='ffill',inplace=True)
 
 
+#from sklearn.cross_validation import train_test_split
+#
+#feature_col_names = ['volume','binStartPrice','binEndPrice']
+#predicted_class_names = ['output_remainingVolume']
+#
+#X = df[feature_col_names].values     # predictor feature columns (8 X m)
+#y = df[predicted_class_names].values # predicted class (1=true, 0=false) column (1 X m)
+#split_test_size = 0.30
+#
+#x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=split_test_size, random_state=42)
+
 
 #average of binPrice
 train_data['binPrice'] = (train_data.binStartPrice+train_data.binEndPrice)/2
@@ -109,30 +120,60 @@ result = pd.merge(Y1,Y2,on=['date','stock'])
 
 result2 = pd.merge(X1,result,on=['date','stock'])
 
-expected_output = train_data[['auctionIndicator','output_closeAuctionVolume','output_closePriceDirection']]
+expected_output = train_data[['date','stock','auctionIndicator','output_closeAuctionVolume','output_closePriceDirection']]
 expected_output = expected_output[expected_output.auctionIndicator==1]
 expected_output = expected_output.reset_index()
 del expected_output['index']
 del expected_output['auctionIndicator']
+finalTraining_data = pd.merge(result2,expected_output,on=['date','stock'])
+
+x_axis = finalTraining_data.iloc[:,0:22]
+y_axis = finalTraining_data.iloc[:,22]
+
+from sklearn.cross_validation import train_test_split
+split_test_size = 0.30
+x_train, x_test, y_train, y_test = train_test_split(x_axis, y_axis, test_size=split_test_size, random_state=42)
 
 
-expected_train_data=expected_output[['output_closeAuctionVolume']]
+#expected_train_data=expected_output[['output_closeAuctionVolume']]
+
+
 # Fitting Multiple Linear Regression to the Training set
+
+
+
 from sklearn.linear_model import LinearRegression
 regressor = LinearRegression()
-regressor.fit(result2, expected_train_data)
+regressor.fit(x_train, y_train)
+
+# Predicting the Test set results
+y_pred = regressor.predict(x_test)
 
 from sklearn import metrics
 
 
-#print("Accuracy: {0:.4f}".format(np.sqrt(metrics.mean_squared_error(expected_train_data, lg_pred_train))))
-#print("Accuracy: {0:.4f}".format(metrics.r2_score(y_train, lg_pred_train)))
+print("Accuracy: {0:.4f}".format(np.sqrt(metrics.mean_squared_error(y_test, y_pred))))
+print("Accuracy: {0:.4f}".format(metrics.r2_score(y_test, y_pred)))
+
+
+from sklearn.ensemble import RandomForestClassifier
+rf_model = RandomForestClassifier(random_state=42)      # Create random forest object
+rf_model.fit(x_train, y_train.ravel())
+
+y_pred_rd = regressor.predict(x_test)
+
+from sklearn import metrics
+
+
+print("Accuracy: {0:.4f}".format(np.sqrt(metrics.mean_squared_error(y_test, y_pred_rd))))
+print("Accuracy: {0:.4f}".format(metrics.r2_score(y_test, y_pred_rd)))
 
 #----------------------------------------------------------------------------------------------
 
 
+#Splitting
 
-#result = pd.merge(result,Y,on=['date','stock'])
+
 
 
 
