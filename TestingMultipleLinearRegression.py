@@ -59,15 +59,15 @@ X3['frameId']=0
 #X3['frameId'] = np.where(((X3['binNum']>=26) & (X3['binNum']<=37)),3,4) # 1130 0130
 #X3['frameId'] = np.where(((X3['binNum']>=38) & (X3['binNum']<=49)),4,5) # 0130 0230
 #X3['frameId'] = np.where(((X3['binNum']>=50) & (X3['binNum']<=69)),5,6) # 0230 0400
-X3.loc[X3["binNum"] < 73, "frameId"] = 9 # 930 1038
-X3.loc[X3["binNum"] < 65, "frameId"] = 8 # 930 1030
-X3.loc[X3["binNum"] < 57, "frameId"] = 7
-X3.loc[X3["binNum"] < 49, "frameId"] = 6
-X3.loc[X3["binNum"] < 41, "frameId"] = 5
-X3.loc[X3["binNum"] < 33, "frameId"] = 4
-X3.loc[X3["binNum"] < 25, "frameId"] = 3
-X3.loc[X3["binNum"] < 17, "frameId"] = 2
-X3.loc[X3["binNum"] < 9, "frameId"] = 1
+#X3.loc[X3["binNum"] < 73, "frameId"] = 9 # 930 1038
+#X3.loc[X3["binNum"] < 65, "frameId"] = 8 # 930 1030
+#X3.loc[X3["binNum"] < 57, "frameId"] = 7
+X3.loc[X3["binNum"] < 70, "frameId"] = 6
+X3.loc[X3["binNum"] < 51, "frameId"] = 5
+X3.loc[X3["binNum"] < 41, "frameId"] = 4
+X3.loc[X3["binNum"] < 31, "frameId"] = 3
+X3.loc[X3["binNum"] < 21, "frameId"] = 2
+X3.loc[X3["binNum"] < 11, "frameId"] = 1
 #X3['frameId'] = np.where(((X3['binNum']>=14) & (X3['binNum']<=25)),2,3) # 1030 1130
 #X3['frameId'] = np.where(((X3['binNum']>=26) & (X3['binNum']<=37)),3,4) # 1130 0130
 #X3['frameId'] = np.where(((X3['binNum']>=38) & (X3['binNum']<=49)),4,5) # 0130 0230
@@ -97,9 +97,9 @@ Y1 =Y1.rename(columns={3.0:"3_volume"})
 Y1 =Y1.rename(columns={4.0:"4_volume"})
 Y1 =Y1.rename(columns={5.0:"5_volume"})
 Y1 =Y1.rename(columns={6.0:"6_volume"})
-Y1 =Y1.rename(columns={7.0:"7_volume"})
-Y1 =Y1.rename(columns={8.0:"8_volume"})
-Y1 =Y1.rename(columns={9.0:"9_volume"})
+#Y1 =Y1.rename(columns={7.0:"7_volume"})
+#Y1 =Y1.rename(columns={8.0:"8_volume"})
+#Y1 =Y1.rename(columns={9.0:"9_volume"})
 Y1.dtypes
 
 Y2 =pd.pivot_table(Y, values = 'binPrice', index=['date','stock'],columns = ['frameId']).reset_index()
@@ -109,9 +109,9 @@ Y2 =Y2.rename(columns={3.0:"3_binPrice"})
 Y2 =Y2.rename(columns={4.0:"4_binPrice"})
 Y2 =Y2.rename(columns={5.0:"5_binPrice"})
 Y2 =Y2.rename(columns={6.0:"6_binPrice"})
-Y2 =Y2.rename(columns={7.0:"7_binPrice"})
-Y2 =Y2.rename(columns={8.0:"8_binPrice"})
-Y2 =Y2.rename(columns={9.0:"9_binPrice"})
+#Y2 =Y2.rename(columns={7.0:"7_binPrice"})
+#Y2 =Y2.rename(columns={8.0:"8_binPrice"})
+#Y2 =Y2.rename(columns={9.0:"9_binPrice"})
 
 result = pd.merge(Y1,Y2,on=['date','stock'])
 
@@ -129,8 +129,8 @@ del expected_output['index']
 del expected_output['auctionIndicator']
 finalTraining_data = pd.merge(result2,expected_output,on=['date','stock'])
 
-x_axis = finalTraining_data.iloc[:,0:22]
-y_axis = finalTraining_data.iloc[:,22]
+x_axis = finalTraining_data.iloc[:,0:16]
+y_axis = finalTraining_data.iloc[:,16]
 
 from sklearn.cross_validation import train_test_split
 split_test_size = 0.30
@@ -144,28 +144,27 @@ x_train, x_test, y_train, y_test = train_test_split(x_axis, y_axis, test_size=sp
 
 
 
-from sklearn.linear_model import LinearRegression
-regressor = LinearRegression()
-regressor.fit(x_train, y_train)
-
-# Predicting the Test set results
-y_pred = regressor.predict(x_test)
-
-from sklearn import metrics
-
-
-print("Accuracy: {0:.4f}".format(np.sqrt(metrics.mean_squared_error(y_test, y_pred))))
-print("Accuracy: {0:.4f}".format(metrics.r2_score(y_test, y_pred)))
-
+#from sklearn.linear_model import LinearRegression
+#regressor = LinearRegression()
+#regressor.fit(x_train, y_train)
+#
+## Predicting the Test set results
+#y_pred = regressor.predict(x_test)
+#
+#from sklearn import metrics
+#
+#
+#print("Accuracy: {0:.4f}".format(np.sqrt(metrics.mean_squared_error(y_test, y_pred))))
+#print("Accuracy: {0:.4f}".format(metrics.r2_score(y_test, y_pred)))
 
 
 from sklearn.ensemble import RandomForestClassifier
 x_train_10k = x_train.iloc[0:10000,:]
 y_train_10k = y_train.iloc[0:10000]
-rf_model = RandomForestClassifier(random_state=42)      # Create random forest object
-rf_model.fit(x_train_10k, y_train_10k.ravel())
+rf_model = RandomForestClassifier(n_estimators = 10, criterion = 'entropy', random_state = 0)      # Create random forest object
+rf_model.fit(x_train, y_train)
 
-y_pred_rd = regressor.predict(x_test)
+y_pred_rd = rf_model.predict(x_test)
 
 from sklearn import metrics
 
@@ -178,31 +177,15 @@ print("Accuracy: {0:.4f}".format(metrics.r2_score(y_test, y_pred_rd)))
 x_train.dtypes
 #Splitting
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #---------------------------------------------------------------------------
 
-scaling_df = train_data[['date','stock','binStartPrice','binEndPrice']]
-from sklearn.preprocessing import MinMaxScaler
-scaler = MinMaxScaler()
-scaler.fit(scaling_df[['binStartPrice','binEndPrice']])
-MinMaxScaler(copy=False, feature_range=(0, 1))
-scaling_array = scaler.transform(scaling_df[['binStartPrice','binEndPrice']])
-scaling_df = pd.DataFrame(scaling_array)
+#scaling_df = train_data[['date','stock','binStartPrice','binEndPrice']]
+#from sklearn.preprocessing import MinMaxScaler
+#scaler = MinMaxScaler()
+#scaler.fit(scaling_df[['binStartPrice','binEndPrice']])
+#MinMaxScaler(copy=False, feature_range=(0, 1))
+#scaling_array = scaler.transform(scaling_df[['binStartPrice','binEndPrice']])
+#scaling_df = pd.DataFrame(scaling_array)
 
 
 
